@@ -1,0 +1,175 @@
+-- Create Database
+CREATE DATABASE BankDB;
+
+USE BankDB;
+
+--------------------------------------------------
+-- Create Branch Table
+--------------------------------------------------
+
+CREATE TABLE Branch(
+    branch_name VARCHAR(50) PRIMARY KEY,
+    branch_city VARCHAR(50) NOT NULL,
+    assets DECIMAL(12,2) NOT NULL
+);
+
+--------------------------------------------------
+-- Create Account Table
+--------------------------------------------------
+
+CREATE TABLE Account(
+    acc_no INT PRIMARY KEY,
+    branch_name VARCHAR(50),
+    balance DECIMAL(10,2) NOT NULL,
+
+    FOREIGN KEY(branch_name)
+    REFERENCES Branch(branch_name)
+);
+
+--------------------------------------------------
+-- Create Customer Table
+--------------------------------------------------
+
+CREATE TABLE Customer(
+    cust_name VARCHAR(50) PRIMARY KEY,
+    cust_street VARCHAR(100) NOT NULL,
+    cust_city VARCHAR(50) NOT NULL
+);
+
+--------------------------------------------------
+-- Create Depositor Table
+--------------------------------------------------
+
+CREATE TABLE Depositor(
+    cust_name VARCHAR(50),
+    acc_no INT,
+
+    PRIMARY KEY(cust_name, acc_no),
+
+    FOREIGN KEY(cust_name)
+    REFERENCES Customer(cust_name),
+
+    FOREIGN KEY(acc_no)
+    REFERENCES Account(acc_no)
+);
+
+--------------------------------------------------
+-- Create Loan Table
+--------------------------------------------------
+
+CREATE TABLE Loan(
+    loan_no INT PRIMARY KEY,
+    branch_name VARCHAR(50),
+    amount DECIMAL(10,2) NOT NULL,
+
+    FOREIGN KEY(branch_name)
+    REFERENCES Branch(branch_name)
+);
+
+--------------------------------------------------
+-- Create Borrower Table
+--------------------------------------------------
+
+CREATE TABLE Borrower(
+    cust_name VARCHAR(50),
+    loan_no INT,
+
+    PRIMARY KEY(cust_name, loan_no),
+
+    FOREIGN KEY(cust_name)
+    REFERENCES Customer(cust_name),
+
+    FOREIGN KEY(loan_no)
+    REFERENCES Loan(loan_no)
+);
+
+--------------------------------------------------
+-- Insert Sample Data
+--------------------------------------------------
+
+INSERT INTO Branch VALUES
+('Wadia College','Pune',500000),
+('FC Road','Pune',300000),
+('Shivaji Nagar','Mumbai',700000);
+
+INSERT INTO Account VALUES
+(101,'Wadia College',25000),
+(102,'FC Road',12000),
+(103,'Wadia College',18000),
+(104,'Shivaji Nagar',10000);
+
+INSERT INTO Customer VALUES
+('Pratik','JM Road','Pune'),
+('Pooja','Camp','Mumbai'),
+('Rahul','Karve Nagar','Pune'),
+('Sneha','MG Road','Nashik');
+
+INSERT INTO Depositor VALUES
+('Pratik',101),
+('Pooja',102),
+('Rahul',103),
+('Sneha',104);
+
+INSERT INTO Loan VALUES
+(201,'Wadia College',1400),
+(202,'FC Road',20000),
+(203,'Shivaji Nagar',1450),
+(204,'Wadia College',25000);
+
+INSERT INTO Borrower VALUES
+('Pratik',201),
+('Pooja',202),
+('Rahul',203),
+('Sneha',204);
+
+--------------------------------------------------
+-- 1. Find branches where average account
+-- balance > 15000
+--------------------------------------------------
+
+SELECT branch_name,
+       AVG(balance) AS Average_Balance
+FROM Account
+GROUP BY branch_name
+HAVING AVG(balance) > 15000;
+
+--------------------------------------------------
+-- 2. Find number of tuples in Customer relation
+--------------------------------------------------
+
+SELECT COUNT(*) AS Total_Customers
+FROM Customer;
+
+--------------------------------------------------
+-- 3. Calculate total loan amount given by bank
+--------------------------------------------------
+
+SELECT SUM(amount) AS Total_Loan_Amount
+FROM Loan;
+
+--------------------------------------------------
+-- 4. Delete all loans with loan amount
+-- between 1300 and 1500
+--------------------------------------------------
+
+DELETE FROM Loan
+WHERE amount BETWEEN 1300 AND 1500;
+
+--------------------------------------------------
+-- 5. Find average account balance at each branch
+--------------------------------------------------
+
+SELECT branch_name,
+       AVG(balance) AS Average_Balance
+FROM Account
+GROUP BY branch_name;
+
+--------------------------------------------------
+-- 6. Find customer name and city where
+-- customer name starts with letter P
+--------------------------------------------------
+
+SELECT cust_name,
+       cust_city
+FROM Customer
+WHERE cust_name LIKE 'P%';

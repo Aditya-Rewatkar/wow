@@ -1,0 +1,116 @@
+--------------------------------------------------
+-- Create Borrower Table
+--------------------------------------------------
+
+CREATE TABLE Borrower(
+    Rollin NUMBER PRIMARY KEY,
+    Name VARCHAR2(50),
+    DateofIssue DATE,
+    NameofBook VARCHAR2(50),
+    Status CHAR(1)
+);
+
+--------------------------------------------------
+-- Create Fine Table
+--------------------------------------------------
+
+CREATE TABLE Fine(
+    Roll_no NUMBER,
+    Date1 DATE,
+    Amt NUMBER
+);
+
+--------------------------------------------------
+-- Insert Sample Data
+--------------------------------------------------
+
+INSERT INTO Borrower
+VALUES(1,'Aditya',SYSDATE-20,'DBMS','I');
+
+INSERT INTO Borrower
+VALUES(2,'Rahul',SYSDATE-40,'Java','I');
+
+COMMIT;
+
+--------------------------------------------------
+-- Unnamed PL/SQL Block
+--------------------------------------------------
+
+DECLARE
+
+    r_no NUMBER;
+    b_name VARCHAR2(50);
+
+    issue_date DATE;
+    no_of_days NUMBER;
+
+    fine_amt NUMBER := 0;
+
+BEGIN
+
+    -- Accept Input
+
+    r_no := &roll_no;
+    b_name := '&book_name';
+
+    -- Get Issue Date
+
+    SELECT DateofIssue
+    INTO issue_date
+    FROM Borrower
+    WHERE Rollin = r_no
+    AND NameofBook = b_name;
+
+    -- Calculate Days
+
+    no_of_days := SYSDATE - issue_date;
+
+    --------------------------------------------------
+    -- Fine Calculation
+    --------------------------------------------------
+
+    IF no_of_days BETWEEN 15 AND 30 THEN
+
+        fine_amt := no_of_days * 5;
+
+    ELSIF no_of_days > 30 THEN
+
+        fine_amt := (30 * 5) +
+                    ((no_of_days - 30) * 50);
+
+    END IF;
+
+    --------------------------------------------------
+    -- Insert Fine Details if Fine Exists
+    --------------------------------------------------
+
+    IF fine_amt > 0 THEN
+
+        INSERT INTO Fine
+        VALUES(r_no, SYSDATE, fine_amt);
+
+    END IF;
+
+    --------------------------------------------------
+    -- Update Status from I to R
+    --------------------------------------------------
+
+    UPDATE Borrower
+    SET Status = 'R'
+    WHERE Rollin = r_no
+    AND NameofBook = b_name;
+
+    COMMIT;
+
+    --------------------------------------------------
+    -- Display Output
+    --------------------------------------------------
+
+    DBMS_OUTPUT.PUT_LINE('Number of Days = ' || no_of_days);
+
+    DBMS_OUTPUT.PUT_LINE('Fine Amount = ' || fine_amt);
+
+    DBMS_OUTPUT.PUT_LINE('Book Returned Successfully');
+
+END;
+/

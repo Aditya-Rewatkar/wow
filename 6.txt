@@ -1,0 +1,157 @@
+--------------------------------------------------
+-- Create Database
+--------------------------------------------------
+
+CREATE DATABASE CompanyOrdersDB;
+
+USE CompanyOrdersDB;
+
+--------------------------------------------------
+-- Create Companies Table
+--------------------------------------------------
+
+CREATE TABLE Companies(
+    comp_id INT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    cost DECIMAL(10,2) NOT NULL,
+    year INT NOT NULL
+);
+
+--------------------------------------------------
+-- Create Orders Table
+--------------------------------------------------
+
+CREATE TABLE Orders(
+    comp_id INT,
+    domain VARCHAR(50) NOT NULL,
+    quantity INT NOT NULL,
+
+    FOREIGN KEY(comp_id)
+    REFERENCES Companies(comp_id)
+);
+
+--------------------------------------------------
+-- Insert Records into Companies
+--------------------------------------------------
+
+INSERT INTO Companies VALUES
+(101,'TCS',50000,2020),
+(102,'InfoSys',65000,2021),
+(103,'TechM',45000,2022),
+(104,'Wipro',70000,2023);
+
+--------------------------------------------------
+-- Insert Records into Orders
+--------------------------------------------------
+
+INSERT INTO Orders VALUES
+(101,'Software',10),
+(102,'Networking',5),
+(103,'Cloud',8),
+(101,'Security',4);
+
+--------------------------------------------------
+-- 1. INNER JOIN
+-- Find names, costs, domains and quantities
+--------------------------------------------------
+
+SELECT Companies.name,
+       Companies.cost,
+       Orders.domain,
+       Orders.quantity
+FROM Companies
+INNER JOIN Orders
+ON Companies.comp_id = Orders.comp_id;
+
+--------------------------------------------------
+-- 2. LEFT OUTER JOIN
+--------------------------------------------------
+
+SELECT Companies.name,
+       Companies.cost,
+       Orders.domain,
+       Orders.quantity
+FROM Companies
+LEFT OUTER JOIN Orders
+ON Companies.comp_id = Orders.comp_id;
+
+--------------------------------------------------
+-- 3. RIGHT OUTER JOIN
+--------------------------------------------------
+
+SELECT Companies.name,
+       Companies.cost,
+       Orders.domain,
+       Orders.quantity
+FROM Companies
+RIGHT OUTER JOIN Orders
+ON Companies.comp_id = Orders.comp_id;
+
+--------------------------------------------------
+-- 4. UNION OPERATOR
+--------------------------------------------------
+
+SELECT name AS Details
+FROM Companies
+
+UNION
+
+SELECT domain
+FROM Orders;
+
+--------------------------------------------------
+-- 5. Create View1 showing
+-- company name and quantity
+--------------------------------------------------
+
+CREATE VIEW View1 AS
+SELECT Companies.name,
+       Orders.quantity
+FROM Companies
+JOIN Orders
+ON Companies.comp_id = Orders.comp_id;
+
+--------------------------------------------------
+-- Display View1
+--------------------------------------------------
+
+SELECT * FROM View1;
+
+--------------------------------------------------
+-- 6. Create View2 using two columns
+--------------------------------------------------
+
+CREATE VIEW View2 AS
+SELECT comp_id,
+       name
+FROM Companies;
+
+--------------------------------------------------
+-- INSERT operation on base table
+--------------------------------------------------
+
+INSERT INTO Companies VALUES
+(105,'Capgemini',55000,2024);
+
+--------------------------------------------------
+-- UPDATE operation on base table
+--------------------------------------------------
+
+UPDATE Companies
+SET cost = 75000
+WHERE comp_id = 104;
+
+--------------------------------------------------
+-- DELETE operation on base table
+--------------------------------------------------
+
+DELETE FROM Companies
+WHERE comp_id = 105;
+
+--------------------------------------------------
+-- 7. Display contents of View1 and View2
+--------------------------------------------------
+
+SELECT * FROM View1;
+
+SELECT * FROM View2;

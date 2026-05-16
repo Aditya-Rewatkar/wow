@@ -1,0 +1,96 @@
+--------------------------------------------------
+-- Create Library Table
+--------------------------------------------------
+
+CREATE TABLE Library(
+    Book_id NUMBER PRIMARY KEY,
+    Book_name VARCHAR2(50),
+    Author VARCHAR2(50),
+    Price NUMBER
+);
+
+--------------------------------------------------
+-- Create Library_Audit Table
+--------------------------------------------------
+
+CREATE TABLE Library_Audit(
+    Book_id NUMBER,
+    Book_name VARCHAR2(50),
+    Author VARCHAR2(50),
+    Price NUMBER,
+    Operation VARCHAR2(20),
+    Action_Date DATE
+);
+
+--------------------------------------------------
+-- Insert Sample Records
+--------------------------------------------------
+
+INSERT INTO Library VALUES
+(101,'DBMS','Korth',500);
+
+INSERT INTO Library VALUES
+(102,'Java','James',600);
+
+COMMIT;
+
+--------------------------------------------------
+-- BEFORE UPDATE OR DELETE TRIGGER
+--------------------------------------------------
+
+CREATE OR REPLACE TRIGGER trg_library_before
+BEFORE UPDATE OR DELETE
+ON Library
+FOR EACH ROW
+
+BEGIN
+
+    --------------------------------------------------
+    -- Store Old Values into Audit Table
+    --------------------------------------------------
+
+    INSERT INTO Library_Audit
+    VALUES
+    (
+        :OLD.Book_id,
+        :OLD.Book_name,
+        :OLD.Author,
+        :OLD.Price,
+
+        CASE
+            WHEN UPDATING THEN 'UPDATED'
+            WHEN DELETING THEN 'DELETED'
+        END,
+
+        SYSDATE
+    );
+
+END;
+/
+
+
+
+AFTER TriggerCREATE OR REPLACE TRIGGER trg_library_after
+AFTER UPDATE OR DELETE
+ON Library
+FOR EACH ROW
+
+BEGIN
+
+    DBMS_OUTPUT.PUT_LINE
+    ('Record Successfully Updated or Deleted');
+
+END;
+/
+
+Test UPDATE Operation
+UPDATE Library
+SET Price = 700
+WHERE Book_id = 101;
+
+Test DELETE Operation
+DELETE FROM Library
+WHERE Book_id = 102;
+
+Display Audit Table
+SELECT * FROM Library_Audit;

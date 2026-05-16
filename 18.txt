@@ -1,0 +1,87 @@
+--------------------------------------------------
+-- Create CUSTOMERS Table
+--------------------------------------------------
+
+CREATE TABLE CUSTOMERS(
+    Cust_id NUMBER PRIMARY KEY,
+    Cust_name VARCHAR2(50),
+    Salary NUMBER
+);
+
+--------------------------------------------------
+-- Insert Sample Records
+--------------------------------------------------
+
+INSERT INTO CUSTOMERS VALUES
+(101,'Aditya',30000);
+
+INSERT INTO CUSTOMERS VALUES
+(102,'Rahul',40000);
+
+COMMIT;
+
+--------------------------------------------------
+-- Create Row Level Trigger
+--------------------------------------------------
+
+CREATE OR REPLACE TRIGGER trg_customer_salary
+BEFORE INSERT OR UPDATE OR DELETE
+ON CUSTOMERS
+FOR EACH ROW
+
+BEGIN
+
+    --------------------------------------------------
+    -- INSERT Operation
+    --------------------------------------------------
+
+    IF INSERTING THEN
+
+        DBMS_OUTPUT.PUT_LINE
+        ('New Salary = ' || :NEW.Salary);
+
+    --------------------------------------------------
+    -- UPDATE Operation
+    --------------------------------------------------
+
+    ELSIF UPDATING THEN
+
+        DBMS_OUTPUT.PUT_LINE
+        ('Old Salary = ' || :OLD.Salary);
+
+        DBMS_OUTPUT.PUT_LINE
+        ('New Salary = ' || :NEW.Salary);
+
+        DBMS_OUTPUT.PUT_LINE
+        (
+            'Salary Difference = ' ||
+            (:NEW.Salary - :OLD.Salary)
+        );
+
+    --------------------------------------------------
+    -- DELETE Operation
+    --------------------------------------------------
+
+    ELSIF DELETING THEN
+
+        DBMS_OUTPUT.PUT_LINE
+        ('Deleted Salary = ' || :OLD.Salary);
+
+    END IF;
+
+END;
+/
+
+
+Test INSERT	
+INSERT INTO CUSTOMERS
+VALUES(103,'Sneha',50000);
+
+Test UPDATE
+UPDATE CUSTOMERS
+SET Salary = 55000
+WHERE Cust_id = 103;
+
+Test DELETE
+DELETE FROM CUSTOMERS
+WHERE Cust_id = 102;

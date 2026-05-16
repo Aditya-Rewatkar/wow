@@ -1,0 +1,282 @@
+// Create Database
+use CompanyDB
+
+//--------------------------------------------------
+// Create Employee Collection
+//--------------------------------------------------
+
+db.Employee.insertMany([
+
+{
+    Name:{
+        FName:"Aditya",
+        LName:"Patil"
+    },
+    Company_Name:"TCS",
+    Salary:50000,
+    Designation:"Programmer",
+    Age:25,
+    Expertise:["MongoDB","MySQL"],
+    DOB:"2001-05-12",
+    Email_id:"aditya@gmail.com",
+    Contact:"9876543210",
+    Address:[
+        {
+            PAddr:"Pune"
+        },
+        {
+            LAddr:"Mumbai"
+        }
+    ]
+},
+
+{
+    Name:{
+        FName:"Rahul",
+        LName:"Sharma"
+    },
+    Company_Name:"Infosys",
+    Salary:60000,
+    Designation:"Developer",
+    Age:45,
+    Expertise:["Java","Oracle"],
+    DOB:"1981-08-15",
+    Email_id:"rahul@gmail.com",
+    Contact:"9988776655",
+    Address:[
+        {
+            PAddr:"Pune"
+        },
+        {
+            LAddr:"Delhi"
+        }
+    ]
+},
+
+{
+    Name:{
+        FName:"Sneha",
+        LName:"Joshi"
+    },
+    Company_Name:"TCS",
+    Salary:70000,
+    Designation:"Manager",
+    Age:42,
+    Expertise:["Python","MongoDB"],
+    DOB:"1984-01-20",
+    Email_id:"sneha@gmail.com",
+    Contact:"9123456780",
+    Address:[
+        {
+            PAddr:"Mumbai"
+        },
+        {
+            LAddr:"Pune"
+        }
+    ]
+},
+
+{
+    Name:{
+        FName:"Pooja",
+        LName:"Kale"
+    },
+    Company_Name:"Wipro",
+    Salary:40000,
+    Designation:"Tester",
+    Age:28,
+    Expertise:["Testing","C++"],
+    DOB:"1998-11-25",
+    Email_id:"pooja@gmail.com",
+    Contact:"9012345678",
+    Address:[
+        {
+            PAddr:"Pune"
+        },
+        {
+            LAddr:"Nagpur"
+        }
+    ]
+},
+
+{
+    Name:{
+        FName:"Karan",
+        LName:"Mehta"
+    },
+    Company_Name:"Infosys",
+    Salary:80000,
+    Designation:"Architect",
+    Age:50,
+    Expertise:["Cloud","Cassandra"],
+    DOB:"1976-03-10",
+    Email_id:"karan@gmail.com",
+    Contact:"9090909090",
+    Address:[
+        {
+            PAddr:"Bangalore"
+        },
+        {
+            LAddr:"Pune"
+        }
+    ]
+}
+
+])
+
+//--------------------------------------------------
+// 1. Display total salary per company
+//--------------------------------------------------
+
+var map1 = function() {
+    emit(this.Company_Name, this.Salary);
+};
+
+var reduce1 = function(key, values) {
+    return Array.sum(values);
+};
+
+db.Employee.mapReduce(
+    map1,
+    reduce1,
+    {
+        out:"TotalSalaryPerCompany"
+    }
+)
+
+db.TotalSalaryPerCompany.find()
+
+//--------------------------------------------------
+// 2. Display total salary of company "TCS"
+//--------------------------------------------------
+
+db.Employee.mapReduce(
+    function() {
+        if(this.Company_Name=="TCS")
+        emit(this.Company_Name, this.Salary);
+    },
+
+    function(key, values) {
+        return Array.sum(values);
+    },
+
+    {
+        out:"TCSSalary"
+    }
+)
+
+db.TCSSalary.find()
+
+//--------------------------------------------------
+// 3. Return average salary of company
+// whose address is "Pune"
+//--------------------------------------------------
+
+db.Employee.mapReduce(
+
+    function() {
+
+        for(var i=0; i<this.Address.length; i++) {
+
+            if(this.Address[i].PAddr=="Pune" ||
+               this.Address[i].LAddr=="Pune") {
+
+                emit(this.Company_Name,
+                {
+                    total:this.Salary,
+                    count:1
+                });
+            }
+        }
+    },
+
+    function(key, values) {
+
+        var result = {
+            total:0,
+            count:0
+        };
+
+        values.forEach(function(v) {
+            result.total += v.total;
+            result.count += v.count;
+        });
+
+        return result;
+    },
+
+    {
+        out:"AverageSalaryPune",
+        finalize:function(key, reducedValue) {
+
+            return reducedValue.total /
+                   reducedValue.count;
+        }
+    }
+)
+
+db.AverageSalaryPune.find()
+
+//--------------------------------------------------
+// 4. Display total count for City = Pune
+//--------------------------------------------------
+
+db.Employee.mapReduce(
+
+    function() {
+
+        for(var i=0; i<this.Address.length; i++) {
+
+            if(this.Address[i].PAddr=="Pune" ||
+               this.Address[i].LAddr=="Pune") {
+
+                emit("Pune",1);
+            }
+        }
+    },
+
+    function(key, values) {
+
+        return Array.sum(values);
+    },
+
+    {
+        out:"PuneCount"
+    }
+)
+
+db.PuneCount.find()
+
+//--------------------------------------------------
+// 5. Return count for city Pune
+// and age greater than 40
+//--------------------------------------------------
+
+db.Employee.mapReduce(
+
+    function() {
+
+        if(this.Age > 40) {
+
+            for(var i=0; i<this.Address.length; i++) {
+
+                if(this.Address[i].PAddr=="Pune" ||
+                   this.Address[i].LAddr=="Pune") {
+
+                    emit("Pune_Age_GT_40",1);
+                }
+            }
+        }
+    },
+
+    function(key, values) {
+
+        return Array.sum(values);
+    },
+
+    {
+        out:"PuneAgeCount"
+    }
+)
+
+db.PuneAgeCount.find()

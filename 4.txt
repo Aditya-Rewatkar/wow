@@ -1,0 +1,185 @@
+--------------------------------------------------
+-- Create Database
+--------------------------------------------------
+
+CREATE DATABASE CustomerDB;
+
+USE CustomerDB;
+
+--------------------------------------------------
+-- Create Cust_Master Table
+--------------------------------------------------
+
+CREATE TABLE Cust_Master(
+    Cust_no VARCHAR(10) PRIMARY KEY,
+    Cust_name VARCHAR(50) NOT NULL,
+    Cust_addr VARCHAR(100) NOT NULL
+);
+
+--------------------------------------------------
+-- Create Orders Table
+--------------------------------------------------
+
+CREATE TABLE Orders(
+    Order_no INT PRIMARY KEY,
+    Cust_no VARCHAR(10),
+    Order_date DATE NOT NULL,
+    Qty_Ordered INT NOT NULL,
+
+    FOREIGN KEY(Cust_no)
+    REFERENCES Cust_Master(Cust_no)
+);
+
+--------------------------------------------------
+-- Create Product Table
+--------------------------------------------------
+
+CREATE TABLE Product(
+    Product_no INT PRIMARY KEY,
+    Product_name VARCHAR(50) NOT NULL,
+    Order_no INT,
+
+    FOREIGN KEY(Order_no)
+    REFERENCES Orders(Order_no)
+);
+
+--------------------------------------------------
+-- Insert Records into Cust_Master
+--------------------------------------------------
+
+INSERT INTO Cust_Master VALUES
+('C1001','Ramesh','Pune'),
+('C1002','Karan','Banglore'),
+('C1005','Mahesh','Manglore'),
+('C1007','Sagar','Mumbai'),
+('C1008','Raj','Banglore');
+
+--------------------------------------------------
+-- Insert Records into Orders
+--------------------------------------------------
+
+INSERT INTO Orders VALUES
+(101,'C1001','2026-05-01',2),
+(102,'C1002','2026-05-02',5),
+(103,'C1005','2026-05-03',3),
+(104,'C1007','2026-05-04',1),
+(105,'C1008','2026-05-05',4);
+
+--------------------------------------------------
+-- Insert Records into Product
+--------------------------------------------------
+
+INSERT INTO Product VALUES
+(1,'Laptop',101),
+(2,'Mouse',102),
+(3,'Keyboard',103),
+(4,'Monitor',104),
+(5,'Printer',105);
+
+--------------------------------------------------
+-- 1. List names of customers having
+-- 'A' as second letter in their name
+--------------------------------------------------
+
+SELECT Cust_name
+FROM Cust_Master
+WHERE Cust_name LIKE '_A%';
+
+--------------------------------------------------
+-- 2. Display orders from customer no
+-- C1002, C1005, C1007 and C1008
+--------------------------------------------------
+
+SELECT *
+FROM Orders
+WHERE Cust_no IN ('C1002','C1005','C1007','C1008');
+
+--------------------------------------------------
+-- 3. List clients who stay in either
+-- 'Banglore' or 'Manglore'
+--------------------------------------------------
+
+SELECT *
+FROM Cust_Master
+WHERE Cust_addr IN ('Banglore','Manglore');
+
+--------------------------------------------------
+-- 4. Display customer name and
+-- product name they purchased
+--------------------------------------------------
+
+SELECT Cust_Master.Cust_name,
+       Product.Product_name
+FROM Cust_Master
+JOIN Orders
+ON Cust_Master.Cust_no = Orders.Cust_no
+JOIN Product
+ON Orders.Order_no = Product.Order_no;
+
+--------------------------------------------------
+-- 5. Create View View1 consisting of
+-- Cust_name and Product_name
+--------------------------------------------------
+
+CREATE VIEW View1 AS
+SELECT Cust_Master.Cust_name,
+       Product.Product_name
+FROM Cust_Master
+JOIN Orders
+ON Cust_Master.Cust_no = Orders.Cust_no
+JOIN Product
+ON Orders.Order_no = Product.Order_no;
+
+--------------------------------------------------
+-- Display View
+--------------------------------------------------
+
+SELECT * FROM View1;
+
+--------------------------------------------------
+-- 6. Display product name and quantity
+-- purchased by each customer
+--------------------------------------------------
+
+SELECT Cust_Master.Cust_name,
+       Product.Product_name,
+       Orders.Qty_Ordered
+FROM Cust_Master
+JOIN Orders
+ON Cust_Master.Cust_no = Orders.Cust_no
+JOIN Product
+ON Orders.Order_no = Product.Order_no;
+
+--------------------------------------------------
+-- 7. Different Join Operations
+--------------------------------------------------
+
+--------------------------------------------------
+-- INNER JOIN
+--------------------------------------------------
+
+SELECT Cust_Master.Cust_name,
+       Orders.Order_no
+FROM Cust_Master
+INNER JOIN Orders
+ON Cust_Master.Cust_no = Orders.Cust_no;
+
+--------------------------------------------------
+-- LEFT JOIN
+--------------------------------------------------
+
+SELECT Cust_Master.Cust_name,
+       Orders.Order_no
+FROM Cust_Master
+LEFT JOIN Orders
+ON Cust_Master.Cust_no = Orders.Cust_no;
+
+--------------------------------------------------
+-- RIGHT JOIN
+--------------------------------------------------
+
+SELECT Cust_Master.Cust_name,
+       Orders.Order_no
+FROM Cust_Master
+RIGHT JOIN Orders
+ON Cust_Master.Cust_no = Orders.Cust_no;

@@ -1,0 +1,107 @@
+--------------------------------------------------
+-- Create Employee Table
+--------------------------------------------------
+
+CREATE TABLE emp(
+    emp_no NUMBER PRIMARY KEY,
+    salary NUMBER
+);
+
+--------------------------------------------------
+-- Create Increment Salary Table
+--------------------------------------------------
+
+CREATE TABLE increment_salary(
+    emp_no NUMBER,
+    salary NUMBER
+);
+
+--------------------------------------------------
+-- Insert Sample Records
+--------------------------------------------------
+
+INSERT INTO emp VALUES(101,20000);
+INSERT INTO emp VALUES(102,30000);
+INSERT INTO emp VALUES(103,40000);
+INSERT INTO emp VALUES(104,50000);
+
+COMMIT;
+
+--------------------------------------------------
+-- PL/SQL Block
+--------------------------------------------------
+
+DECLARE
+
+    --------------------------------------------------
+    -- Variables
+    --------------------------------------------------
+
+    avg_salary NUMBER;
+
+BEGIN
+
+    --------------------------------------------------
+    -- Calculate Average Salary
+    --------------------------------------------------
+
+    SELECT AVG(salary)
+    INTO avg_salary
+    FROM emp;
+
+    --------------------------------------------------
+    -- Update Salary by 10%
+    -- for Employees having salary
+    -- less than average salary
+    --------------------------------------------------
+
+    FOR rec IN
+    (
+        SELECT emp_no, salary
+        FROM emp
+        WHERE salary < avg_salary
+    )
+
+    LOOP
+
+        --------------------------------------------------
+        -- Increase Salary by 10%
+        --------------------------------------------------
+
+        UPDATE emp
+        SET salary = salary + (salary * 0.10)
+        WHERE emp_no = rec.emp_no;
+
+        --------------------------------------------------
+        -- Store Updated Record
+        --------------------------------------------------
+
+        INSERT INTO increment_salary
+        VALUES
+        (
+            rec.emp_no,
+            rec.salary + (rec.salary * 0.10)
+        );
+
+        --------------------------------------------------
+        -- Display Message
+        --------------------------------------------------
+
+        DBMS_OUTPUT.PUT_LINE
+        (
+            'Salary Updated for Employee No: '
+            || rec.emp_no
+        );
+
+    END LOOP;
+
+    COMMIT;
+
+END;
+/
+
+
+
+SELECT * FROM emp;
+
+SELECT * FROM increment_salary;

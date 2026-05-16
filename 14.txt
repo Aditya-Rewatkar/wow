@@ -1,0 +1,94 @@
+--------------------------------------------------
+-- Create Student Table
+--------------------------------------------------
+
+CREATE TABLE Student(
+    Roll NUMBER PRIMARY KEY,
+    Name VARCHAR2(50),
+    Attendance NUMBER,
+    Status VARCHAR2(20)
+);
+
+--------------------------------------------------
+-- Insert Sample Records
+--------------------------------------------------
+
+INSERT INTO Student VALUES
+(1,'Aditya',80,NULL);
+
+INSERT INTO Student VALUES
+(2,'Rahul',65,NULL);
+
+INSERT INTO Student VALUES
+(3,'Sneha',90,NULL);
+
+COMMIT;
+
+--------------------------------------------------
+-- PL/SQL Block with Exception Handling
+--------------------------------------------------
+
+DECLARE
+
+    r_no Student.Roll%TYPE;
+    att Student.Attendance%TYPE;
+
+BEGIN
+
+    --------------------------------------------------
+    -- Accept Roll Number from User
+    --------------------------------------------------
+
+    r_no := &roll_no;
+
+    --------------------------------------------------
+    -- Fetch Attendance
+    --------------------------------------------------
+
+    SELECT Attendance
+    INTO att
+    FROM Student
+    WHERE Roll = r_no;
+
+    --------------------------------------------------
+    -- Check Attendance Condition
+    --------------------------------------------------
+
+    IF att < 75 THEN
+
+        UPDATE Student
+        SET Status = 'Detained'
+        WHERE Roll = r_no;
+
+        DBMS_OUTPUT.PUT_LINE('Term not granted');
+
+    ELSE
+
+        UPDATE Student
+        SET Status = 'Not Detained'
+        WHERE Roll = r_no;
+
+        DBMS_OUTPUT.PUT_LINE('Term granted');
+
+    END IF;
+
+    COMMIT;
+
+--------------------------------------------------
+-- Exception Handling
+--------------------------------------------------
+
+EXCEPTION
+
+    WHEN NO_DATA_FOUND THEN
+
+        DBMS_OUTPUT.PUT_LINE
+        ('Student Roll Number Not Found');
+
+    WHEN OTHERS THEN
+
+        DBMS_OUTPUT.PUT_LINE
+        ('Error Occurred');
+
+END;
+/

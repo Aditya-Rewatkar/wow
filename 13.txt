@@ -1,0 +1,122 @@
+--------------------------------------------------
+-- Create Old Roll Call Table
+--------------------------------------------------
+
+CREATE TABLE O_RollCall(
+    RollNo NUMBER PRIMARY KEY,
+    Name VARCHAR2(50)
+);
+
+--------------------------------------------------
+-- Create New Roll Call Table
+--------------------------------------------------
+
+CREATE TABLE N_RollCall(
+    RollNo NUMBER PRIMARY KEY,
+    Name VARCHAR2(50)
+);
+
+--------------------------------------------------
+-- Insert Sample Data into O_RollCall
+--------------------------------------------------
+
+INSERT INTO O_RollCall VALUES(1,'Aditya');
+INSERT INTO O_RollCall VALUES(2,'Rahul');
+INSERT INTO O_RollCall VALUES(3,'Sneha');
+
+--------------------------------------------------
+-- Insert Sample Data into N_RollCall
+--------------------------------------------------
+
+INSERT INTO N_RollCall VALUES(2,'Rahul');
+INSERT INTO N_RollCall VALUES(3,'Sneha');
+INSERT INTO N_RollCall VALUES(4,'Pooja');
+INSERT INTO N_RollCall VALUES(5,'Karan');
+
+COMMIT;
+
+--------------------------------------------------
+-- PL/SQL Block using Cursor
+--------------------------------------------------
+
+DECLARE
+
+    --------------------------------------------------
+    -- Cursor Declaration
+    --------------------------------------------------
+
+    CURSOR c1 IS
+    SELECT *
+    FROM N_RollCall;
+
+    --------------------------------------------------
+    -- Variables
+    --------------------------------------------------
+
+    v_rollno N_RollCall.RollNo%TYPE;
+    v_name   N_RollCall.Name%TYPE;
+
+    v_count NUMBER;
+
+BEGIN
+
+    --------------------------------------------------
+    -- Open Cursor
+    --------------------------------------------------
+
+    OPEN c1;
+
+    LOOP
+
+        --------------------------------------------------
+        -- Fetch Data
+        --------------------------------------------------
+
+        FETCH c1 INTO v_rollno, v_name;
+
+        --------------------------------------------------
+        -- Exit Condition
+        --------------------------------------------------
+
+        EXIT WHEN c1%NOTFOUND;
+
+        --------------------------------------------------
+        -- Check if Record Exists
+        --------------------------------------------------
+
+        SELECT COUNT(*)
+        INTO v_count
+        FROM O_RollCall
+        WHERE RollNo = v_rollno;
+
+        --------------------------------------------------
+        -- Insert if Record Does Not Exist
+        --------------------------------------------------
+
+        IF v_count = 0 THEN
+
+            INSERT INTO O_RollCall
+            VALUES(v_rollno, v_name);
+
+            DBMS_OUTPUT.PUT_LINE
+            ('Record Inserted: ' || v_rollno || ' ' || v_name);
+
+        ELSE
+
+            DBMS_OUTPUT.PUT_LINE
+            ('Record Already Exists: ' || v_rollno);
+
+        END IF;
+
+    END LOOP;
+
+    --------------------------------------------------
+    -- Close Cursor
+    --------------------------------------------------
+
+    CLOSE c1;
+
+    COMMIT;
+
+END;
+/
