@@ -3,10 +3,10 @@
 --------------------------------------------------
 
 CREATE TABLE Library(
-    Book_id NUMBER PRIMARY KEY,
-    Book_name VARCHAR2(50),
-    Author VARCHAR2(50),
-    Price NUMBER
+    Book_id INT PRIMARY KEY,
+    Book_name VARCHAR(50),
+    Author VARCHAR(50),
+    Price DECIMAL(10,2)
 );
 
 --------------------------------------------------
@@ -14,11 +14,11 @@ CREATE TABLE Library(
 --------------------------------------------------
 
 CREATE TABLE Library_Audit(
-    Book_id NUMBER,
-    Book_name VARCHAR2(50),
-    Author VARCHAR2(50),
-    Price NUMBER,
-    Operation VARCHAR2(20),
+    Book_id INT,
+    Book_name VARCHAR(50),
+    Author VARCHAR(50),
+    Price DECIMAL(10,2),
+    Operation_Type VARCHAR(20),
     Action_Date DATE
 );
 
@@ -32,65 +32,137 @@ INSERT INTO Library VALUES
 INSERT INTO Library VALUES
 (102,'Java','James',600);
 
-COMMIT;
-
 --------------------------------------------------
--- BEFORE UPDATE OR DELETE TRIGGER
+-- BEFORE UPDATE Trigger
 --------------------------------------------------
 
-CREATE OR REPLACE TRIGGER trg_library_before
-BEFORE UPDATE OR DELETE
+DELIMITER //
+
+CREATE TRIGGER trg_library_before_update
+
+BEFORE UPDATE
 ON Library
+
 FOR EACH ROW
 
 BEGIN
 
     --------------------------------------------------
-    -- Store Old Values into Audit Table
+    -- Store Old Record Before Update
     --------------------------------------------------
 
     INSERT INTO Library_Audit
     VALUES
     (
-        :OLD.Book_id,
-        :OLD.Book_name,
-        :OLD.Author,
-        :OLD.Price,
-
-        CASE
-            WHEN UPDATING THEN 'UPDATED'
-            WHEN DELETING THEN 'DELETED'
-        END,
-
-        SYSDATE
+        OLD.Book_id,
+        OLD.Book_name,
+        OLD.Author,
+        OLD.Price,
+        'UPDATED',
+        CURDATE()
     );
 
-END;
-/
+END //
 
+DELIMITER ;
 
+--------------------------------------------------
+-- BEFORE DELETE Trigger
+--------------------------------------------------
 
-AFTER TriggerCREATE OR REPLACE TRIGGER trg_library_after
-AFTER UPDATE OR DELETE
+DELIMITER //
+
+CREATE TRIGGER trg_library_before_delete
+
+BEFORE DELETE
 ON Library
+
 FOR EACH ROW
 
 BEGIN
 
-    DBMS_OUTPUT.PUT_LINE
-    ('Record Successfully Updated or Deleted');
+    --------------------------------------------------
+    -- Store Old Record Before Delete
+    --------------------------------------------------
 
-END;
-/
+    INSERT INTO Library_Audit
+    VALUES
+    (
+        OLD.Book_id,
+        OLD.Book_name,
+        OLD.Author,
+        OLD.Price,
+        'DELETED',
+        CURDATE()
+    );
 
-Test UPDATE Operation
+END //
+
+DELIMITER ;
+
+--------------------------------------------------
+-- AFTER UPDATE Trigger
+--------------------------------------------------
+
+DELIMITER //
+
+CREATE TRIGGER trg_library_after_update
+
+AFTER UPDATE
+ON Library
+
+FOR EACH ROW
+
+BEGIN
+
+    SELECT
+    'Record Successfully Updated'
+    AS Message;
+
+END //
+
+DELIMITER ;
+
+--------------------------------------------------
+-- AFTER DELETE Trigger
+--------------------------------------------------
+
+DELIMITER //
+
+CREATE TRIGGER trg_library_after_delete
+
+AFTER DELETE
+ON Library
+
+FOR EACH ROW
+
+BEGIN
+
+    SELECT
+    'Record Successfully Deleted'
+    AS Message;
+
+END //
+
+DELIMITER ;
+
+--------------------------------------------------
+-- Test UPDATE Operation
+--------------------------------------------------
+
 UPDATE Library
 SET Price = 700
 WHERE Book_id = 101;
 
-Test DELETE Operation
+--------------------------------------------------
+-- Test DELETE Operation
+--------------------------------------------------
+
 DELETE FROM Library
 WHERE Book_id = 102;
 
-Display Audit Table
+--------------------------------------------------
+-- Display Audit Table
+--------------------------------------------------
+
 SELECT * FROM Library_Audit;
