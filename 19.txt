@@ -3,9 +3,9 @@
 --------------------------------------------------
 
 CREATE TABLE Emp(
-    Emp_no NUMBER PRIMARY KEY,
-    Emp_name VARCHAR2(50),
-    Emp_salary NUMBER
+    Emp_no INT PRIMARY KEY,
+    Emp_name VARCHAR(50),
+    Emp_salary DECIMAL(10,2)
 );
 
 --------------------------------------------------
@@ -13,8 +13,8 @@ CREATE TABLE Emp(
 --------------------------------------------------
 
 CREATE TABLE Tracking(
-    Emp_no NUMBER,
-    Emp_salary NUMBER
+    Emp_no INT,
+    Emp_salary DECIMAL(10,2)
 );
 
 --------------------------------------------------
@@ -27,77 +27,113 @@ INSERT INTO Emp VALUES
 INSERT INTO Emp VALUES
 (102,'Rahul',70000);
 
-COMMIT;
-
 --------------------------------------------------
--- Create AFTER Trigger
+-- AFTER INSERT Trigger
 --------------------------------------------------
 
-CREATE OR REPLACE TRIGGER trg_emp_salary
-AFTER INSERT OR UPDATE OR DELETE
+DELIMITER //
+
+CREATE TRIGGER trg_emp_insert
+
+AFTER INSERT
 ON Emp
+
 FOR EACH ROW
 
 BEGIN
 
-    --------------------------------------------------
-    -- INSERT Operation
-    --------------------------------------------------
+    IF NEW.Emp_salary < 50000 THEN
 
-    IF INSERTING THEN
+        INSERT INTO Tracking
+        VALUES(NEW.Emp_no, NEW.Emp_salary);
 
-        IF :NEW.Emp_salary < 50000 THEN
-
-            DBMS_OUTPUT.PUT_LINE
-            ('Salary less than 50000 inserted');
-
-            INSERT INTO Tracking
-            VALUES(:NEW.Emp_no, :NEW.Emp_salary);
-
-        END IF;
-
-    --------------------------------------------------
-    -- UPDATE Operation
-    --------------------------------------------------
-
-    ELSIF UPDATING THEN
-
-        IF :NEW.Emp_salary < 50000 THEN
-
-            DBMS_OUTPUT.PUT_LINE
-            ('Updated salary less than 50000');
-
-            INSERT INTO Tracking
-            VALUES(:NEW.Emp_no, :NEW.Emp_salary);
-
-        END IF;
-
-    --------------------------------------------------
-    -- DELETE Operation
-    --------------------------------------------------
-
-    ELSIF DELETING THEN
-
-        DBMS_OUTPUT.PUT_LINE
-        ('Employee Record Deleted');
+        SELECT
+        'Salary less than 50000 inserted'
+        AS Message;
 
     END IF;
 
-END;
-/
+END //
 
-Test INSERT
+DELIMITER ;
+
+--------------------------------------------------
+-- AFTER UPDATE Trigger
+--------------------------------------------------
+
+DELIMITER //
+
+CREATE TRIGGER trg_emp_update
+
+AFTER UPDATE
+ON Emp
+
+FOR EACH ROW
+
+BEGIN
+
+    IF NEW.Emp_salary < 50000 THEN
+
+        INSERT INTO Tracking
+        VALUES(NEW.Emp_no, NEW.Emp_salary);
+
+        SELECT
+        'Updated salary less than 50000'
+        AS Message;
+
+    END IF;
+
+END //
+
+DELIMITER ;
+
+--------------------------------------------------
+-- AFTER DELETE Trigger
+--------------------------------------------------
+
+DELIMITER //
+
+CREATE TRIGGER trg_emp_delete
+
+AFTER DELETE
+ON Emp
+
+FOR EACH ROW
+
+BEGIN
+
+    SELECT
+    'Employee Record Deleted'
+    AS Message;
+
+END //
+
+DELIMITER ;
+
+--------------------------------------------------
+-- Test INSERT
+--------------------------------------------------
+
 INSERT INTO Emp
 VALUES(103,'Sneha',45000);
 
-Test UPDATE
+--------------------------------------------------
+-- Test UPDATE
+--------------------------------------------------
+
 UPDATE Emp
 SET Emp_salary = 40000
 WHERE Emp_no = 101;
 
-Test DELETE
+--------------------------------------------------
+-- Test DELETE
+--------------------------------------------------
+
 DELETE FROM Emp
 WHERE Emp_no = 102;
 
-Display Tracking Table
+--------------------------------------------------
+-- Display Tracking Table
+--------------------------------------------------
+
 SELECT * FROM Tracking;
