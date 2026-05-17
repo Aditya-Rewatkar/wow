@@ -3,8 +3,8 @@
 --------------------------------------------------
 
 CREATE TABLE emp(
-    emp_no NUMBER PRIMARY KEY,
-    salary NUMBER
+    emp_no INT PRIMARY KEY,
+    salary DECIMAL(10,2)
 );
 
 --------------------------------------------------
@@ -12,8 +12,8 @@ CREATE TABLE emp(
 --------------------------------------------------
 
 CREATE TABLE increment_salary(
-    emp_no NUMBER,
-    salary NUMBER
+    emp_no INT,
+    salary DECIMAL(10,2)
 );
 
 --------------------------------------------------
@@ -25,21 +25,44 @@ INSERT INTO emp VALUES(102,30000);
 INSERT INTO emp VALUES(103,40000);
 INSERT INTO emp VALUES(104,50000);
 
-COMMIT;
-
 --------------------------------------------------
--- PL/SQL Block
+-- Create Procedure
 --------------------------------------------------
 
-DECLARE
+DELIMITER //
 
-    --------------------------------------------------
-    -- Variables
-    --------------------------------------------------
-
-    avg_salary NUMBER;
+CREATE PROCEDURE IncreaseSalary()
 
 BEGIN
+
+    --------------------------------------------------
+    -- Variable Declaration
+    --------------------------------------------------
+
+    DECLARE done INT DEFAULT 0;
+
+    DECLARE v_empno INT;
+    DECLARE v_salary DECIMAL(10,2);
+
+    DECLARE avg_salary DECIMAL(10,2);
+
+    --------------------------------------------------
+    -- Cursor Declaration
+    --------------------------------------------------
+
+    DECLARE c1 CURSOR FOR
+
+    SELECT emp_no, salary
+    FROM emp
+    WHERE salary < avg_salary;
+
+    --------------------------------------------------
+    -- Handler Declaration
+    --------------------------------------------------
+
+    DECLARE CONTINUE HANDLER
+    FOR NOT FOUND
+    SET done = 1;
 
     --------------------------------------------------
     -- Calculate Average Salary
@@ -50,19 +73,26 @@ BEGIN
     FROM emp;
 
     --------------------------------------------------
-    -- Update Salary by 10%
-    -- for Employees having salary
-    -- less than average salary
+    -- Open Cursor
     --------------------------------------------------
 
-    FOR rec IN
-    (
-        SELECT emp_no, salary
-        FROM emp
-        WHERE salary < avg_salary
-    )
+    OPEN c1;
 
-    LOOP
+    read_loop: LOOP
+
+        --------------------------------------------------
+        -- Fetch Record
+        --------------------------------------------------
+
+        FETCH c1 INTO v_empno, v_salary;
+
+        --------------------------------------------------
+        -- Exit Condition
+        --------------------------------------------------
+
+        IF done = 1 THEN
+            LEAVE read_loop;
+        END IF;
 
         --------------------------------------------------
         -- Increase Salary by 10%
@@ -70,38 +100,55 @@ BEGIN
 
         UPDATE emp
         SET salary = salary + (salary * 0.10)
-        WHERE emp_no = rec.emp_no;
+        WHERE emp_no = v_empno;
 
         --------------------------------------------------
-        -- Store Updated Record
+        -- Store Updated Salary
         --------------------------------------------------
 
         INSERT INTO increment_salary
         VALUES
         (
-            rec.emp_no,
-            rec.salary + (rec.salary * 0.10)
+            v_empno,
+            v_salary + (v_salary * 0.10)
         );
 
         --------------------------------------------------
         -- Display Message
         --------------------------------------------------
 
-        DBMS_OUTPUT.PUT_LINE
+        SELECT CONCAT
         (
-            'Salary Updated for Employee No: '
-            || rec.emp_no
-        );
+            'Salary Updated for Employee No: ',
+            v_empno
+        ) AS Message;
 
     END LOOP;
 
-    COMMIT;
+    --------------------------------------------------
+    -- Close Cursor
+    --------------------------------------------------
 
-END;
-/
+    CLOSE c1;
 
+END //
 
+DELIMITER ;
+
+--------------------------------------------------
+-- Execute Procedure
+--------------------------------------------------
+
+CALL IncreaseSalary();
+
+--------------------------------------------------
+-- Display Updated Employee Table
+--------------------------------------------------
 
 SELECT * FROM emp;
+
+--------------------------------------------------
+-- Display Increment Salary Table
+--------------------------------------------------
 
 SELECT * FROM increment_salary;
