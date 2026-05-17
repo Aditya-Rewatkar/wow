@@ -3,9 +3,9 @@
 --------------------------------------------------
 
 CREATE TABLE CUSTOMERS(
-    Cust_id NUMBER PRIMARY KEY,
-    Cust_name VARCHAR2(50),
-    Salary NUMBER
+    Cust_id INT PRIMARY KEY,
+    Cust_name VARCHAR(50),
+    Salary DECIMAL(10,2)
 );
 
 --------------------------------------------------
@@ -18,70 +18,117 @@ INSERT INTO CUSTOMERS VALUES
 INSERT INTO CUSTOMERS VALUES
 (102,'Rahul',40000);
 
-COMMIT;
-
 --------------------------------------------------
--- Create Row Level Trigger
+-- BEFORE INSERT Trigger
 --------------------------------------------------
 
-CREATE OR REPLACE TRIGGER trg_customer_salary
-BEFORE INSERT OR UPDATE OR DELETE
+DELIMITER //
+
+CREATE TRIGGER trg_customer_insert
+
+BEFORE INSERT
 ON CUSTOMERS
+
 FOR EACH ROW
 
 BEGIN
 
-    --------------------------------------------------
-    -- INSERT Operation
-    --------------------------------------------------
+    SELECT CONCAT
+    (
+        'New Salary = ',
+        NEW.Salary
+    ) AS Message;
 
-    IF INSERTING THEN
+END //
 
-        DBMS_OUTPUT.PUT_LINE
-        ('New Salary = ' || :NEW.Salary);
+DELIMITER ;
 
-    --------------------------------------------------
-    -- UPDATE Operation
-    --------------------------------------------------
+--------------------------------------------------
+-- BEFORE UPDATE Trigger
+--------------------------------------------------
 
-    ELSIF UPDATING THEN
+DELIMITER //
 
-        DBMS_OUTPUT.PUT_LINE
-        ('Old Salary = ' || :OLD.Salary);
+CREATE TRIGGER trg_customer_update
 
-        DBMS_OUTPUT.PUT_LINE
-        ('New Salary = ' || :NEW.Salary);
+BEFORE UPDATE
+ON CUSTOMERS
 
-        DBMS_OUTPUT.PUT_LINE
-        (
-            'Salary Difference = ' ||
-            (:NEW.Salary - :OLD.Salary)
-        );
+FOR EACH ROW
 
-    --------------------------------------------------
-    -- DELETE Operation
-    --------------------------------------------------
+BEGIN
 
-    ELSIF DELETING THEN
+    SELECT CONCAT
+    (
+        'Old Salary = ',
+        OLD.Salary
+    ) AS Old_Salary;
 
-        DBMS_OUTPUT.PUT_LINE
-        ('Deleted Salary = ' || :OLD.Salary);
+    SELECT CONCAT
+    (
+        'New Salary = ',
+        NEW.Salary
+    ) AS New_Salary;
 
-    END IF;
+    SELECT CONCAT
+    (
+        'Salary Difference = ',
+        (NEW.Salary - OLD.Salary)
+    ) AS Difference;
 
-END;
-/
+END //
 
+DELIMITER ;
 
-Test INSERT	
+--------------------------------------------------
+-- BEFORE DELETE Trigger
+--------------------------------------------------
+
+DELIMITER //
+
+CREATE TRIGGER trg_customer_delete
+
+BEFORE DELETE
+ON CUSTOMERS
+
+FOR EACH ROW
+
+BEGIN
+
+    SELECT CONCAT
+    (
+        'Deleted Salary = ',
+        OLD.Salary
+    ) AS Message;
+
+END //
+
+DELIMITER ;
+
+--------------------------------------------------
+-- Test INSERT
+--------------------------------------------------
+
 INSERT INTO CUSTOMERS
 VALUES(103,'Sneha',50000);
 
-Test UPDATE
+--------------------------------------------------
+-- Test UPDATE
+--------------------------------------------------
+
 UPDATE CUSTOMERS
 SET Salary = 55000
 WHERE Cust_id = 103;
 
-Test DELETE
+--------------------------------------------------
+-- Test DELETE
+--------------------------------------------------
+
 DELETE FROM CUSTOMERS
 WHERE Cust_id = 102;
+
+--------------------------------------------------
+-- Display Table
+--------------------------------------------------
+
+SELECT * FROM CUSTOMERS;
