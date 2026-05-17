@@ -3,10 +3,10 @@
 --------------------------------------------------
 
 CREATE TABLE Student(
-    Roll NUMBER PRIMARY KEY,
-    Name VARCHAR2(50),
-    Attendance NUMBER,
-    Status VARCHAR2(20)
+    Roll INT PRIMARY KEY,
+    Name VARCHAR(50),
+    Attendance INT,
+    Status VARCHAR(20)
 );
 
 --------------------------------------------------
@@ -22,73 +22,101 @@ INSERT INTO Student VALUES
 INSERT INTO Student VALUES
 (3,'Sneha',90,NULL);
 
-COMMIT;
-
 --------------------------------------------------
--- PL/SQL Block with Exception Handling
+-- Create Procedure
 --------------------------------------------------
 
-DECLARE
+DELIMITER //
 
-    r_no Student.Roll%TYPE;
-    att Student.Attendance%TYPE;
+CREATE PROCEDURE CheckAttendance
+(
+    IN r_no INT
+)
 
 BEGIN
 
     --------------------------------------------------
-    -- Accept Roll Number from User
+    -- Variable Declaration
     --------------------------------------------------
 
-    r_no := &roll_no;
+    DECLARE att INT;
 
     --------------------------------------------------
-    -- Fetch Attendance
+    -- Exception Handling Variable
     --------------------------------------------------
 
-    SELECT Attendance
-    INTO att
+    DECLARE student_count INT;
+
+    --------------------------------------------------
+    -- Check Student Exists
+    --------------------------------------------------
+
+    SELECT COUNT(*)
+    INTO student_count
     FROM Student
     WHERE Roll = r_no;
 
     --------------------------------------------------
-    -- Check Attendance Condition
+    -- If Student Not Found
     --------------------------------------------------
 
-    IF att < 75 THEN
+    IF student_count = 0 THEN
 
-        UPDATE Student
-        SET Status = 'Detained'
-        WHERE Roll = r_no;
-
-        DBMS_OUTPUT.PUT_LINE('Term not granted');
+        SELECT
+        'Student Roll Number Not Found'
+        AS Message;
 
     ELSE
 
-        UPDATE Student
-        SET Status = 'Not Detained'
+        --------------------------------------------------
+        -- Fetch Attendance
+        --------------------------------------------------
+
+        SELECT Attendance
+        INTO att
+        FROM Student
         WHERE Roll = r_no;
 
-        DBMS_OUTPUT.PUT_LINE('Term granted');
+        --------------------------------------------------
+        -- Attendance Check
+        --------------------------------------------------
+
+        IF att < 75 THEN
+
+            UPDATE Student
+            SET Status = 'Detained'
+            WHERE Roll = r_no;
+
+            SELECT
+            'Term not granted'
+            AS Message;
+
+        ELSE
+
+            UPDATE Student
+            SET Status = 'Not Detained'
+            WHERE Roll = r_no;
+
+            SELECT
+            'Term granted'
+            AS Message;
+
+        END IF;
 
     END IF;
 
-    COMMIT;
+END //
+
+DELIMITER ;
 
 --------------------------------------------------
--- Exception Handling
+-- Execute Procedure
 --------------------------------------------------
 
-EXCEPTION
+CALL CheckAttendance(2);
 
-    WHEN NO_DATA_FOUND THEN
+--------------------------------------------------
+-- Display Table
+--------------------------------------------------
 
-        DBMS_OUTPUT.PUT_LINE
-        ('Student Roll Number Not Found');
-
-    WHEN OTHERS THEN
-
-        DBMS_OUTPUT.PUT_LINE
-        ('Error Occurred');
-
-END;
-/
+SELECT * FROM Student;
