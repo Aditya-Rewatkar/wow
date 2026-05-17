@@ -3,33 +3,45 @@
 --------------------------------------------------
 
 CREATE TABLE areas(
-    radius NUMBER,
-    area NUMBER(10,2)
+    radius INT,
+    area DECIMAL(10,2)
 );
 
 --------------------------------------------------
--- PL/SQL Block
+-- Create Stored Procedure
 --------------------------------------------------
 
-DECLARE
-    r NUMBER;
-    a NUMBER;
+DELIMITER //
+
+CREATE PROCEDURE calc_area()
 
 BEGIN
 
-    FOR r IN 5..9 LOOP
+    DECLARE r INT;
+    DECLARE a DECIMAL(10,2);
 
-        a := 3.14 * r * r;
+    SET r = 5;
+
+    WHILE r <= 9 DO
+
+        SET a = 3.14 * r * r;
 
         INSERT INTO areas(radius, area)
         VALUES(r, a);
 
-    END LOOP;
+        SET r = r + 1;
 
-    COMMIT;
+    END WHILE;
 
-END;
-/
+END //
+
+DELIMITER ;
+
+--------------------------------------------------
+-- Execute Procedure
+--------------------------------------------------
+
+CALL calc_area();
 
 --------------------------------------------------
 -- Display Table Data
