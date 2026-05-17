@@ -3,10 +3,10 @@
 --------------------------------------------------
 
 CREATE TABLE Borrower(
-    Rollin NUMBER PRIMARY KEY,
-    Name VARCHAR2(50),
+    Rollin INT PRIMARY KEY,
+    Name VARCHAR(50),
     DateofIssue DATE,
-    NameofBook VARCHAR2(50),
+    NameofBook VARCHAR(50),
     Status CHAR(1)
 );
 
@@ -15,9 +15,9 @@ CREATE TABLE Borrower(
 --------------------------------------------------
 
 CREATE TABLE Fine(
-    Roll_no NUMBER,
+    Roll_no INT,
     Date1 DATE,
-    Amt NUMBER
+    Amt DECIMAL(10,2)
 );
 
 --------------------------------------------------
@@ -25,35 +25,36 @@ CREATE TABLE Fine(
 --------------------------------------------------
 
 INSERT INTO Borrower
-VALUES(1,'Aditya',SYSDATE-20,'DBMS','I');
+VALUES(1,'Aditya',CURDATE()-20,'DBMS','I');
 
 INSERT INTO Borrower
-VALUES(2,'Rahul',SYSDATE-40,'Java','I');
-
-COMMIT;
+VALUES(2,'Rahul',CURDATE()-40,'Java','I');
 
 --------------------------------------------------
--- Unnamed PL/SQL Block
+-- Create Stored Procedure
 --------------------------------------------------
 
-DECLARE
+DELIMITER //
 
-    r_no NUMBER;
-    b_name VARCHAR2(50);
-
-    issue_date DATE;
-    no_of_days NUMBER;
-
-    fine_amt NUMBER := 0;
+CREATE PROCEDURE LibraryFine
+(
+    IN r_no INT,
+    IN b_name VARCHAR(50)
+)
 
 BEGIN
 
-    -- Accept Input
+    --------------------------------------------------
+    -- Variable Declaration
+    --------------------------------------------------
 
-    r_no := &roll_no;
-    b_name := '&book_name';
+    DECLARE issue_date DATE;
+    DECLARE no_of_days INT;
+    DECLARE fine_amt DECIMAL(10,2) DEFAULT 0;
 
+    --------------------------------------------------
     -- Get Issue Date
+    --------------------------------------------------
 
     SELECT DateofIssue
     INTO issue_date
@@ -61,9 +62,12 @@ BEGIN
     WHERE Rollin = r_no
     AND NameofBook = b_name;
 
-    -- Calculate Days
+    --------------------------------------------------
+    -- Calculate Number of Days
+    --------------------------------------------------
 
-    no_of_days := SYSDATE - issue_date;
+    SET no_of_days =
+    DATEDIFF(CURDATE(), issue_date);
 
     --------------------------------------------------
     -- Fine Calculation
@@ -71,28 +75,29 @@ BEGIN
 
     IF no_of_days BETWEEN 15 AND 30 THEN
 
-        fine_amt := no_of_days * 5;
+        SET fine_amt = no_of_days * 5;
 
-    ELSIF no_of_days > 30 THEN
+    ELSEIF no_of_days > 30 THEN
 
-        fine_amt := (30 * 5) +
-                    ((no_of_days - 30) * 50);
+        SET fine_amt =
+        (30 * 5) +
+        ((no_of_days - 30) * 50);
 
     END IF;
 
     --------------------------------------------------
-    -- Insert Fine Details if Fine Exists
+    -- Insert Fine Details
     --------------------------------------------------
 
     IF fine_amt > 0 THEN
 
         INSERT INTO Fine
-        VALUES(r_no, SYSDATE, fine_amt);
+        VALUES(r_no, CURDATE(), fine_amt);
 
     END IF;
 
     --------------------------------------------------
-    -- Update Status from I to R
+    -- Update Book Status
     --------------------------------------------------
 
     UPDATE Borrower
@@ -100,17 +105,28 @@ BEGIN
     WHERE Rollin = r_no
     AND NameofBook = b_name;
 
-    COMMIT;
-
     --------------------------------------------------
     -- Display Output
     --------------------------------------------------
 
-    DBMS_OUTPUT.PUT_LINE('Number of Days = ' || no_of_days);
+    SELECT
+    no_of_days AS "Number of Days",
+    fine_amt AS "Fine Amount",
+    'Book Returned Successfully'
+    AS Message;
 
-    DBMS_OUTPUT.PUT_LINE('Fine Amount = ' || fine_amt);
+END //
 
-    DBMS_OUTPUT.PUT_LINE('Book Returned Successfully');
+DELIMITER ;
 
-END;
-/
+--------------------------------------------------
+-- Execute Procedure
+--------------------------------------------------
+
+CALL LibraryFine(1,'DBMS');
+
+--------------------------------------------------
+-- Display Fine Table
+--------------------------------------------------
+
+SELECT * FROM Fine;
