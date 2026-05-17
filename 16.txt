@@ -1,19 +1,46 @@
 --------------------------------------------------
--- Create Stored Function Age_calc
+-- Create Function to Return Years
 --------------------------------------------------
 
-CREATE OR REPLACE FUNCTION Age_calc
+DELIMITER //
+
+CREATE FUNCTION Age_calc(dob DATE)
+
+RETURNS INT
+
+DETERMINISTIC
+
+BEGIN
+
+    DECLARE years INT;
+
+    --------------------------------------------------
+    -- Calculate Years
+    --------------------------------------------------
+
+    SET years =
+    TIMESTAMPDIFF(YEAR, dob, CURDATE());
+
+    RETURN years;
+
+END //
+
+DELIMITER ;
+
+--------------------------------------------------
+-- Create Procedure for
+-- Years, Months and Days
+--------------------------------------------------
+
+DELIMITER //
+
+CREATE PROCEDURE Age_Details
 (
-    dob IN DATE,
-    months OUT NUMBER,
-    days OUT NUMBER
+    IN dob DATE,
+    OUT years INT,
+    OUT months INT,
+    OUT days INT
 )
-
-RETURN NUMBER
-
-IS
-
-    years NUMBER;
 
 BEGIN
 
@@ -21,61 +48,66 @@ BEGIN
     -- Calculate Years
     --------------------------------------------------
 
-    years := FLOOR(MONTHS_BETWEEN(SYSDATE, dob) / 12);
+    SET years =
+    TIMESTAMPDIFF(YEAR, dob, CURDATE());
 
     --------------------------------------------------
-    -- Calculate Remaining Months
+    -- Calculate Months
     --------------------------------------------------
 
-    months := FLOOR
+    SET months =
+    TIMESTAMPDIFF
     (
-        MOD(MONTHS_BETWEEN(SYSDATE, dob), 12)
+        MONTH,
+        DATE_ADD(dob,
+        INTERVAL years YEAR),
+        CURDATE()
     );
 
     --------------------------------------------------
-    -- Calculate Remaining Days
+    -- Calculate Days
     --------------------------------------------------
 
-    days := FLOOR
+    SET days =
+    DATEDIFF
     (
-        SYSDATE -
-        ADD_MONTHS
+        CURDATE(),
+        DATE_ADD
         (
-            dob,
-            years * 12 + months
+            DATE_ADD(dob,
+            INTERVAL years YEAR),
+            INTERVAL months MONTH
         )
     );
 
-    --------------------------------------------------
-    -- Return Years
-    --------------------------------------------------
+END //
 
-    RETURN years;
+DELIMITER ;
 
-END;
-/
+--------------------------------------------------
+-- Execute Procedure
+--------------------------------------------------
 
+CALL Age_Details
+(
+    '2003-05-15',
+    @y,
+    @m,
+    @d
+);
 
+--------------------------------------------------
+-- Display Output
+--------------------------------------------------
 
-DECLARE
+SELECT
+@y AS Years,
+@m AS Months,
+@d AS Days;
 
-    y NUMBER;
-    m NUMBER;
-    d NUMBER;
+--------------------------------------------------
+-- Execute Function
+--------------------------------------------------
 
-BEGIN
-
-    y := Age_calc
-    (
-        TO_DATE('15-05-2003','DD-MM-YYYY'),
-        m,
-        d
-    );
-
-    DBMS_OUTPUT.PUT_LINE
-    ('Age = ' || y || ' Years '
-                 || m || ' Months '
-                 || d || ' Days');
-
-END;
-/
+SELECT Age_calc('2003-05-15')
+AS Total_Years;
